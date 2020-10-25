@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ANN
 {
@@ -16,7 +17,8 @@ namespace ANN
 
         static void Main(string[] args)
         {
-            ANNTest();
+            //ANNTest();
+            InputTest();
         }
 
         private static void ANNTest()
@@ -37,35 +39,50 @@ namespace ANN
             Console.Write("calculation type: ");
             string matrix_calc = Console.ReadLine();
 
-            Console.Write("X1: ");
+            Console.Write("W_X1: ");
             int columns_1 = int.Parse(Console.ReadLine());//columns is equal to the x value of a grid
-            Console.Write("Y1: ");
+            Console.Write("W_Y1: ");
             int rows_1 = int.Parse(Console.ReadLine());//rows is equal to the y value of the grid
 
-            Console.Write("X2: ");
+            Console.Write("X_X2: ");
             int columns_2 = int.Parse(Console.ReadLine());
-            Console.Write("Y2: ");
+            Console.Write("X_Y2: ");
             int rows_2 = int.Parse(Console.ReadLine());
 
-            MatrixVectors matrix_1 = new MatrixVectors(rows_1, columns_1);
-            matrix_1.InputValuesIntoMatrix();
-            MatrixVectors matrix_2 = new MatrixVectors(rows_2, columns_2);
-            matrix_2.InputValuesIntoMatrix();
+            Console.Write("b_X2: ");
+            int columns_3 = int.Parse(Console.ReadLine());
+            Console.Write("b_Y2: ");
+            int rows_3 = int.Parse(Console.ReadLine());
+
+            MatrixVectors matrix_W = new MatrixVectors(rows_1, columns_1);
+            matrix_W.InputValuesIntoMatrix();
+            MatrixVectors vector_X = new MatrixVectors(rows_2, columns_2);
+            vector_X.InputValuesIntoMatrix();
+            MatrixVectors vector_b = new MatrixVectors(rows_3, columns_3);
+            vector_b.InputValuesIntoMatrix();
 
             if (matrix_calc == "dot")
             {
-                MatrixVectors matrix = MatrixCalculations.MatrixMultiplication(matrix_1, matrix_2);
+                MatrixVectors matrix = MatrixCalculations.MatrixMultiplication(matrix_W, vector_X);
                 matrix.OutputMatrixValue();
             }
             else if (matrix_calc == "element")
             {
-                MatrixVectors matrix = MatrixCalculations.MatrixElementWise(matrix_1, matrix_2, Operation.Multiply);
+                MatrixVectors matrix = MatrixCalculations.MatrixElementWise(matrix_W, vector_X, Operation.Multiply);
                 matrix.OutputMatrixValue();
             }
             else if (matrix_calc == "scalar add")
             {
-                MatrixVectors matrix = MatrixCalculations.BroadcastScalar(matrix_1, 2, Operation.Add);
+                MatrixVectors matrix = MatrixCalculations.BroadcastScalar(matrix_W, 2, Operation.Add);
                 matrix.OutputMatrixValue();
+            }
+            else if(matrix_calc == "forward")
+            {
+                int[] dims = { 3, 2 };
+                Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
+                theta.Add("W1", matrix_W);
+                theta.Add("b1", vector_b);
+                neuralNetwork.ForwardPropagation(vector_X, theta, dims);
             }
         }
     }

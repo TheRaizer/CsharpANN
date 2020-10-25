@@ -7,14 +7,13 @@ namespace ANN
     {
         public readonly Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
 
-        private MatrixVectors Sigmoid(MatrixVectors z)
+        public MatrixVectors Sigmoid(MatrixVectors z)
         {
             //This method does the sigmoid calculation equivalent to 1 / (1 + np.Exp(-z)) in python
 
             MatrixVectors activationsVector = MatrixCalculations.Exp(MatrixCalculations.BroadcastScalar(z, -1, Operation.Multiply));
             activationsVector = MatrixCalculations.BroadcastScalar(activationsVector, 1, Operation.Add);
             activationsVector = MatrixCalculations.BroadcastScalar(activationsVector, 1, Operation.DivideUnder);
-
             return activationsVector;
         }
 
@@ -51,12 +50,6 @@ namespace ANN
            
             MatrixVectors z = MatrixCalculations.MatrixElementWise(MatrixCalculations.MatrixMultiplication(weights, previousLayersActivations), bias, Operation.Add);
             LinearCache linearCache = new LinearCache(weights, bias, previousLayersActivations);
-
-            if (z.columns != weights.rows && z.rows != previousLayersActivations.columns)
-            {
-                Console.WriteLine("Z is not the proper shape");
-                Console.WriteLine(z.Shape());
-            }
 
             return new Tuple<LinearCache, MatrixVectors>(linearCache, z);
         }

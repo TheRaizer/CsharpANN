@@ -83,7 +83,7 @@ namespace ANN
             {
                 for(int x = 0; x < matrix.columns; x++)
                 {
-                    outputMatrix.MatrixVector[x, y] = (float)(matrix.MatrixVector[x, y] * Math.E);
+                    outputMatrix.MatrixVector[x, y] = (float)(Math.Pow(Math.E, matrix.MatrixVector[x, y]));
                 }
             }
 
