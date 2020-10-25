@@ -1,0 +1,13 @@
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.exe
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.deps.json
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.runtimeconfig.json
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.runtimeconfig.dev.json
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.dll
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\ANN.pdb
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.csprojAssemblyReference.cache
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.AssemblyInfoInputs.cache
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.AssemblyInfo.cs
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.csproj.CoreCompileInputs.cache
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.dll
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.pdb
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.genruntimeconfig.cache
