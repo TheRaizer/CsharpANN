@@ -20,6 +20,11 @@ namespace ANN
             return new Tuple<int, int>(rows, columns);
         }
 
+        public bool CompareShape(MatrixVectors matrix)
+        {
+            return matrix.columns == columns && matrix.rows == rows;
+        }
+
         public void InitializeRandom()
         {
             for (int y = 0; y < rows; y++)

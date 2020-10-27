@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ANN
 {
@@ -124,7 +125,7 @@ namespace ANN
         {
             if (matrix_2 != null)
             {
-                if (matrix_1.Shape() != matrix_2.Shape())
+                if (!matrix_1.CompareShape(matrix_2))
                 {
                     Console.WriteLine("Matrix shapes do not align");
                     return null;
@@ -147,6 +148,34 @@ namespace ANN
             }
 
             return maximizedMatrix;
+        }
+
+        public static MatrixVectors Transpose(MatrixVectors matrix)
+        {
+            MatrixVectors matrixTranspose = new MatrixVectors(matrix.columns, matrix.rows);
+
+            for(int y = 0; y < matrixTranspose.rows; y++)
+            {
+                for(int x = 0; x < matrixTranspose.columns; x++)
+                {
+                    matrixTranspose.MatrixVector[x, y] = matrix.MatrixVector[y, x];
+                }
+            }
+
+            return matrixTranspose;
+        }
+
+        public static MatrixVectors Log(MatrixVectors matrix)
+        {
+            MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
+            for(int y = 0; y < matrix.rows; y++)
+            {
+                for(int x = 0; x < matrix.columns; x++)
+                {
+                    outputMatrix.MatrixVector[x, y] = (float)Math.Log10(matrix.MatrixVector[x, y]);
+                }
+            }
+            return outputMatrix;
         }
     }
 }

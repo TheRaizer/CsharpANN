@@ -18,7 +18,17 @@ namespace ANN
         static void Main(string[] args)
         {
             //ANNTest();
-            InputTest();
+            //InputTest();
+            Console.Write("W_X1: ");
+            int columns_1 = int.Parse(Console.ReadLine());//columns is equal to the x value of a grid
+            Console.Write("W_Y1: ");
+            int rows_1 = int.Parse(Console.ReadLine());//rows is equal to the y value of the grid
+
+            MatrixVectors matrix = new MatrixVectors(rows_1, columns_1);
+            matrix.InputValuesIntoMatrix();
+
+            MatrixVectors matrixT = MatrixCalculations.Transpose(matrix);
+            matrixT.OutputMatrixValue();
         }
 
         private static void ANNTest()

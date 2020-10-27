@@ -135,5 +135,35 @@ namespace ANN
             
             return cachesAndActivation;
         }
+
+        public float ComputeCost(MatrixVectors yhat, MatrixVectors _y)
+        {
+            ///<summary>
+            /// This method uses the cross entropy cost function to caculate the losses.
+            /// It takes in yhat which are the predictions of the network
+            /// and _y which are the true labels.
+            /// 
+            /// It returns a float value which is the calculated loss as well as its derivative.
+            ///</summary>
+            
+            if (yhat.columns > 1 || _y.columns > 1 || !yhat.CompareShape(_y))
+            {
+                Console.WriteLine("Invalid YShape");
+                return 0f;
+            }
+
+            float crossEntropyCost = 0;
+            for(int y = 0; y < _y.rows; y++)
+            {
+                float currentYhat = yhat.MatrixVector[0, y];
+                float currentY = _y.MatrixVector[0, y];
+                float currentCost = (float)(currentY * Math.Log10(currentYhat) + (1 - currentY) * Math.Log10(1 - currentYhat));
+                crossEntropyCost += currentCost;
+            }
+
+            crossEntropyCost *= -1;
+
+            return crossEntropyCost;
+        }
     }
 }
