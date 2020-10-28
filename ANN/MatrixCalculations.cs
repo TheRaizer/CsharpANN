@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 
 namespace ANN
 {
@@ -163,19 +162,6 @@ namespace ANN
             }
 
             return matrixTranspose;
-        }
-
-        public static MatrixVectors Log(MatrixVectors matrix)
-        {
-            MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
-            for(int y = 0; y < matrix.rows; y++)
-            {
-                for(int x = 0; x < matrix.columns; x++)
-                {
-                    outputMatrix.MatrixVector[x, y] = (float)Math.Log10(matrix.MatrixVector[x, y]);
-                }
-            }
-            return outputMatrix;
         }
     }
 }
