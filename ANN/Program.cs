@@ -23,12 +23,14 @@ namespace ANN
             int columns_1 = int.Parse(Console.ReadLine());//columns is equal to the x value of a grid
             Console.Write("W_Y1: ");
             int rows_1 = int.Parse(Console.ReadLine());//rows is equal to the y value of the grid
+            Console.Write("axis: ");
+            int axis = int.Parse(Console.ReadLine());
 
             MatrixVectors matrix = new MatrixVectors(rows_1, columns_1);
             matrix.InputValuesIntoMatrix();
 
-            MatrixVectors matrixT = MatrixCalculations.Transpose(matrix);
-            matrixT.OutputMatrixValue();
+            MatrixVectors matrixSummed = MatrixCalculations.MatrixAxisSummation(matrix, axis);
+            matrixSummed.OutputMatrixValue();
         }
 
         private static void ANNTest()
@@ -73,7 +75,7 @@ namespace ANN
 
             if (matrix_calc == "dot")
             {
-                MatrixVectors matrix = MatrixCalculations.MatrixMultiplication(matrix_W, vector_X);
+                MatrixVectors matrix = MatrixCalculations.Dot(matrix_W, vector_X);
                 matrix.OutputMatrixValue();
             }
             else if (matrix_calc == "element")

@@ -4,7 +4,7 @@ namespace ANN
 {
     public static class MatrixCalculations
     {
-        public static MatrixVectors MatrixMultiplication(MatrixVectors matrix_1, MatrixVectors matrix_2)
+        public static MatrixVectors Dot(MatrixVectors matrix_1, MatrixVectors matrix_2)
         {
             if (matrix_1.columns != matrix_2.rows)//the number of columns in the first matrix must be equal to the number of rows in the second
             {
@@ -76,6 +76,44 @@ namespace ANN
             return sum;
         }
 
+        public static MatrixVectors MatrixAxisSummation(MatrixVectors matrix, int axis)
+        {
+            ///<summary>
+            /// axis = 0 returns a row vector of all the rows summed together.
+            /// axis = 1 returns a column vector of all the columns summed together.
+            /// In numpy this is equivalent to np.sum with KeepDims always True.
+            ///</summary>
+            
+            if(axis == 0)
+            {
+                MatrixVectors summedOverColumns = new MatrixVectors(1, matrix.columns);
+                for (int x = 0; x < matrix.columns; x++)
+                {
+                    for (int y = 0; y < matrix.rows; y++)
+                    {
+                        summedOverColumns.MatrixVector[x, 0] += matrix.MatrixVector[x, y];
+                    }
+                }
+                return summedOverColumns;
+            }
+            else if(axis == 1)
+            {
+                MatrixVectors summedOverRows = new MatrixVectors(matrix.rows, 1);
+                for (int y = 0; y < matrix.rows; y++)
+                {
+                    for (int x = 0; x < matrix.columns; x++)
+                    {
+                        summedOverRows.MatrixVector[0, y] += matrix.MatrixVector[x, y];
+                    }
+                }
+                return summedOverRows;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+
         public static MatrixVectors Exp(MatrixVectors matrix)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
@@ -90,7 +128,7 @@ namespace ANN
             return outputMatrix;
         }
 
-        public static MatrixVectors BroadcastScalar(MatrixVectors matrix, float scalar, Operation operation)
+        public static MatrixVectors BroadcastScalar(MatrixVectors matrix, float scalar, Operation operation, bool reverse = false)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
 
@@ -104,16 +142,19 @@ namespace ANN
                             outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] + scalar;
                             break;
                         case Operation.Subtract:
-                            outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] - scalar;
+                            if(reverse)
+                                outputMatrix.MatrixVector[x, y] = scalar - matrix.MatrixVector[x, y];
+                            else
+                                outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] - scalar;
                             break;
                         case Operation.Multiply:
                             outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] * scalar;
                             break;
                         case Operation.Divide:
-                            outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] / scalar;
-                            break;
-                        case Operation.DivideUnder:
-                            outputMatrix.MatrixVector[x, y] = scalar / matrix.MatrixVector[x, y];
+                            if(reverse)
+                                outputMatrix.MatrixVector[x, y] = scalar / matrix.MatrixVector[x, y];
+                            else
+                                outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] / scalar;
                             break;
                     }
                 }

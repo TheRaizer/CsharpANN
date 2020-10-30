@@ -4,7 +4,6 @@
     {
         Multiply,
         Divide,
-        DivideUnder,
         Add,
         Subtract,
     }
