@@ -185,6 +185,7 @@ namespace ANN
             }
 
             float crossEntropyCost = 0;
+
             for(int y = 0; y < _y.rows; y++)
             {
                 float currentYhat = yhat.MatrixVector[0, y];
@@ -192,8 +193,6 @@ namespace ANN
                 float currentCost = (float)-(currentY * Math.Log10(currentYhat) + (1 - currentY) * Math.Log10(1 - currentYhat));
                 crossEntropyCost += currentCost;
             }
-
-            crossEntropyCost *= -1;
 
             return crossEntropyCost;
         }
@@ -203,7 +202,7 @@ namespace ANN
             MatrixVectors dW = MatrixCalculations.Dot(dZ, MatrixCalculations.Transpose(linearCache.previousLayersActivations));
             MatrixVectors db = MatrixCalculations.MatrixAxisSummation(dZ, 1);
             MatrixVectors dAPrev = MatrixCalculations.Dot(MatrixCalculations.Transpose(linearCache.weights), dZ);
-            Console.WriteLine(db.Shape());
+
             if (!dW.CompareShape(linearCache.weights))
             {
                 Console.WriteLine("Does not have the right shape for dW");
@@ -259,10 +258,8 @@ namespace ANN
             gradients.Add("dW" + layersCount, dWL);
             gradients.Add("db" + layersCount, dbL);
 
-            Console.WriteLine(layersCount);
             for (int l = layersCount - 1; l > 0; l--)
             {
-                Console.WriteLine("layer: " + l);
                 Tuple<MatrixVectors, MatrixVectors, MatrixVectors> deriv = ActivationsBackward(dAPrev, Zs[l - 1], linearCaches[l - 1], Activation.ReLu);
                 MatrixVectors dW = deriv.Item1;
                 MatrixVectors db = deriv.Item2;
@@ -285,6 +282,13 @@ namespace ANN
             }
 
             return parameters;
+        }
+
+        public void Predict(MatrixVectors input, Dictionary<string, MatrixVectors> theta, int[] dims)
+        {
+            Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = ForwardPropagation(input, theta, dims);
+            Console.WriteLine("Prediction: ");
+            cachesAndAL.Item3.OutputMatrixValue();
         }
     }
 }

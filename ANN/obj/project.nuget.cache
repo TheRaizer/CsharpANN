@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "q6UagnscLdWiK2nKaYyfjQ0gZyTo6HhDxRz+1CPkb/yMVcGPC1AZtW+3rMf3nCmY6BOc0EdIlzcnA30Rn+hCZg==",
+  "dgSpecHash": "bmw35FD/zJzRTRGc+Frz8GYsabx51s6iSqQZeebqxgWnvilPSI0DX2b66uGryxE3tj+meGBfjN/NS+sOcmdNTQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Admin\\source\\repos\\ANN\\ANN\\ANN.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512"
+  ],
   "logs": []
 }

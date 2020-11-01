@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 
 namespace ANN
 {
@@ -13,81 +16,103 @@ namespace ANN
     class Program
     {
         public readonly static Random rand = new Random();
-        private static NeuralNetwork neuralNetwork = new NeuralNetwork();
+        private static readonly NeuralNetwork neuralNetwork = new NeuralNetwork();
 
         static void Main(string[] args)
         {
-            ANNTest();
-            //InputTest();
+            int[] dims = { 3, 2, 1 };
+            //ANNTraining(dims);
+            ANNPredictions(dims);
         }
 
-        private static void ANNTest()
+        private static void ANNPredictions(int[] dims)
         {
-            Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
-            int[] dims = { 3, 2, 2, 1 };
-            theta = neuralNetwork.InitalizeParameters(dims);
-            MatrixVectors inputVector = new MatrixVectors(dims[0], 1);
-            MatrixVectors outputVector = new MatrixVectors(1, 1);
-            outputVector.MatrixVector[0, 0] = 1;
-            for (int y = 0; y < inputVector.columns; y++)
-            {
-                inputVector.MatrixVector[0, y] = (float)(rand.NextDouble() * (0.1 + 0.1) - 0.1);
-            }
+            Console.WriteLine("Predicting...");
+            MatrixVectors input = new MatrixVectors(dims[0], 1);
+            MatrixVectors output = new MatrixVectors(1, 1);
 
-            Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = neuralNetwork.ForwardPropagation(inputVector, theta, dims);
-            Dictionary<string, MatrixVectors> gradients = neuralNetwork.BackwardPropagation(outputVector, cachesAndAL.Item3, cachesAndAL.Item1, cachesAndAL.Item2);
-            theta = neuralNetwork.UpdateParameters(theta, gradients, dims, 0.001f);
+            int numberOfPredictions = 20;
+
+            for (int i = 0; i < numberOfPredictions; i++)
+            {
+                int num = rand.Next(0, 2);
+                for (int y = 0; y < dims[0]; y++)
+                {
+                    input.MatrixVector[0, y] = num;
+                }
+                output.MatrixVector[0, 0] = num;
+                Console.WriteLine("Expected: " + num);
+                Dictionary<string, MatrixVectors> theta = JsonConvert.DeserializeObject< Dictionary<string, MatrixVectors>>(File.ReadAllText("C:\\Users/Admin/source/repos/ANN/ANN/Theta.json"));
+                neuralNetwork.Predict(input, theta, dims);
+            }
         }
 
-        private static void InputTest()
+        private static void ANNTraining(int[] dims)
         {
-            Console.Write("calculation type: ");
-            string matrix_calc = Console.ReadLine();
+            int iterations = 1000;
+            
+            Dictionary<string, MatrixVectors> theta = neuralNetwork.InitalizeParameters(dims);
 
-            Console.Write("W_X1: ");
-            int columns_1 = int.Parse(Console.ReadLine());//columns is equal to the x value of a grid
-            Console.Write("W_Y1: ");
-            int rows_1 = int.Parse(Console.ReadLine());//rows is equal to the y value of the grid
+            List<MatrixVectors> X_training = new List<MatrixVectors>();
+            List<MatrixVectors> Y_training = new List<MatrixVectors>();
+            int numberOfTrainingExamples = 100;
 
-            Console.Write("X_X2: ");
-            int columns_2 = int.Parse(Console.ReadLine());
-            Console.Write("X_Y2: ");
-            int rows_2 = int.Parse(Console.ReadLine());
-
-            Console.Write("b_X2: ");
-            int columns_3 = int.Parse(Console.ReadLine());
-            Console.Write("b_Y2: ");
-            int rows_3 = int.Parse(Console.ReadLine());
-
-            MatrixVectors matrix_W = new MatrixVectors(rows_1, columns_1);
-            matrix_W.InputValuesIntoMatrix();
-            MatrixVectors vector_X = new MatrixVectors(rows_2, columns_2);
-            vector_X.InputValuesIntoMatrix();
-            MatrixVectors vector_b = new MatrixVectors(rows_3, columns_3);
-            vector_b.InputValuesIntoMatrix();
-
-            if (matrix_calc == "dot")
+            Console.WriteLine("Initializing training examples...");
+            for (int i = 0; i < numberOfTrainingExamples; i++)
             {
-                MatrixVectors matrix = MatrixCalculations.Dot(matrix_W, vector_X);
-                matrix.OutputMatrixValue();
+                MatrixVectors inputVector = new MatrixVectors(dims[0], 1);
+                MatrixVectors outputVector = new MatrixVectors(1, 1);
+                int num = rand.Next(0, 2);
+                for (int y = 0; y < dims[0]; y++)
+                {
+                    inputVector.MatrixVector[0, y] = num;
+                }
+                outputVector.MatrixVector[0, 0] = num;
+                X_training.Add(inputVector);
+                Y_training.Add(outputVector);
             }
-            else if (matrix_calc == "element")
+            Console.WriteLine("Starting network...");
+            for (int b = 0; b < iterations; b++) 
             {
-                MatrixVectors matrix = MatrixCalculations.MatrixElementWise(matrix_W, vector_X, Operation.Multiply, "input test");
-                matrix.OutputMatrixValue();
+                float cost = 0;
+                for (int t = 0; t < Y_training.Count; t++)
+                {
+                    Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = neuralNetwork.ForwardPropagation(X_training[t], theta, dims);
+                    cost = neuralNetwork.ComputeCost(cachesAndAL.Item3, Y_training[t]);
+                    Dictionary<string, MatrixVectors> gradients = neuralNetwork.BackwardPropagation(Y_training[t], cachesAndAL.Item3, cachesAndAL.Item1, cachesAndAL.Item2);
+                    theta = neuralNetwork.UpdateParameters(theta, gradients, dims, 0.001f);
+
+                }
+
+                if (b % 100 == 0)
+                    Console.WriteLine("Cost at iteration: " + b + " = " + cost);
             }
-            else if (matrix_calc == "scalar add")
+
+            Console.WriteLine("Predicting0...");
+            MatrixVectors input = new MatrixVectors(dims[0], 1);
+            MatrixVectors output = new MatrixVectors(1, 1);
+            for (int y = 0; y < dims[0]; y++)
             {
-                MatrixVectors matrix = MatrixCalculations.BroadcastScalar(matrix_W, 2, Operation.Add);
-                matrix.OutputMatrixValue();
+                input.MatrixVector[0, y] = 0;
             }
-            else if(matrix_calc == "forward")
+            output.MatrixVector[0, 0] = 0;
+            Console.WriteLine("Expected: " + 0);
+            neuralNetwork.Predict(input, theta, dims);
+
+            Console.WriteLine("Predicting1...");
+            for (int y = 0; y < dims[0]; y++)
             {
-                int[] dims = { 3, 2 };
-                Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
-                theta.Add("W1", matrix_W);
-                theta.Add("b1", vector_b);
-                neuralNetwork.ForwardPropagation(vector_X, theta, dims);
+                input.MatrixVector[0, y] = 1;
+            }
+            output.MatrixVector[0, 0] = 1;
+            Console.WriteLine("Expected: " + 1);
+            neuralNetwork.Predict(input, theta, dims);
+
+            string choice = Console.ReadLine();
+            if(choice == "save")
+            {
+                string jsonString = JsonConvert.SerializeObject(theta);
+                File.WriteAllText("C:\\Users/Admin/source/repos/ANN/ANN/Theta.json", jsonString);
             }
         }
     }
