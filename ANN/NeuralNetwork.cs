@@ -5,8 +5,6 @@ namespace ANN
 {
     public class NeuralNetwork
     {
-        public readonly Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
-
         public MatrixVectors Sigmoid(MatrixVectors z)
         {
             //This method does the sigmoid calculation equivalent to 1 / (1 + np.Exp(-z)) in python
@@ -29,7 +27,7 @@ namespace ANN
             MatrixVectors A_prev = Sigmoid(Z);
             MatrixVectors OneMinusA_prev = MatrixCalculations.BroadcastScalar(A_prev, 1, Operation.Subtract, true);
             MatrixVectors A_prevMultipliedByOneMinusA_prev = MatrixCalculations.MatrixElementWise(A_prev, OneMinusA_prev, Operation.Multiply);
-            MatrixVectors dZ = MatrixCalculations.MatrixElementWise(A_prev, A_prevMultipliedByOneMinusA_prev, Operation.Multiply);
+            MatrixVectors dZ = MatrixCalculations.MatrixElementWise(dA, A_prevMultipliedByOneMinusA_prev, Operation.Multiply);
 
             return dZ;
         }
@@ -56,9 +54,10 @@ namespace ANN
             return dZ;
         }
 
-        public void InitalizeParameters(int[] dims)
+        public Dictionary<string, MatrixVectors> InitalizeParameters(int[] dims)
         {
-            for(int l = 1; l < dims.Length; l++)
+            Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
+            for (int l = 1; l < dims.Length; l++)
             {
                 MatrixVectors weights = new MatrixVectors(dims[l], dims[l - 1]);
                 MatrixVectors bias = new MatrixVectors(dims[l], 1);
@@ -69,6 +68,7 @@ namespace ANN
                 theta.Add("W" + l, weights);
                 theta.Add("b" + l, bias);
             }
+            return theta;
         }
 
         private Tuple<LinearCache, MatrixVectors> LinearForward(MatrixVectors previousLayersActivations, MatrixVectors weights, MatrixVectors bias)
@@ -203,7 +203,7 @@ namespace ANN
             MatrixVectors dW = MatrixCalculations.Dot(dZ, MatrixCalculations.Transpose(linearCache.previousLayersActivations));
             MatrixVectors db = MatrixCalculations.MatrixAxisSummation(dZ, 1);
             MatrixVectors dAPrev = MatrixCalculations.Dot(MatrixCalculations.Transpose(linearCache.weights), dZ);
-
+            Console.WriteLine(db.Shape());
             if (!dW.CompareShape(linearCache.weights))
             {
                 Console.WriteLine("Does not have the right shape for dW");
@@ -237,11 +237,11 @@ namespace ANN
             return LinearBackward(dZ, linearCache);
         }
         
-        public Dictionary<string, MatrixVectors> BackwardPropagation(MatrixVectors Y, MatrixVectors AL, Tuple<List<LinearCache>, List<MatrixVectors>> caches)
+        public Dictionary<string, MatrixVectors> BackwardPropagation(MatrixVectors Y, MatrixVectors AL, List<LinearCache> linearCache, List<MatrixVectors> zCache)
         {
             Dictionary<string, MatrixVectors> gradients = new Dictionary<string, MatrixVectors>();
-            List<LinearCache> linearCaches = caches.Item1;
-            List<MatrixVectors> Zs = caches.Item2;
+            List<LinearCache> linearCaches = linearCache;
+            List<MatrixVectors> Zs = zCache;
             int layersCount = linearCaches.Count;
 
             MatrixVectors YDividedByAL = MatrixCalculations.MatrixElementWise(Y, AL, Operation.Divide);
@@ -254,35 +254,34 @@ namespace ANN
             Tuple<MatrixVectors, MatrixVectors, MatrixVectors> derivatives = ActivationsBackward(dAL, Zs[layersCount - 1], linearCaches[layersCount - 1], Activation.Sigmoid);
             MatrixVectors dWL = derivatives.Item1;
             MatrixVectors dbL = derivatives.Item2;
-            MatrixVectors dAPrevL = derivatives.Item3;
+            MatrixVectors dAPrev = derivatives.Item3;
 
             gradients.Add("dW" + layersCount, dWL);
             gradients.Add("db" + layersCount, dbL);
-            gradients.Add("dA" + (layersCount - 1).ToString(), dAPrevL);
 
-            for(int l = layersCount - 2; l < 0; l--)
+            Console.WriteLine(layersCount);
+            for (int l = layersCount - 1; l > 0; l--)
             {
-                Tuple<MatrixVectors, MatrixVectors, MatrixVectors> deriv = ActivationsBackward(gradients["dA" + (l + 1).ToString()], Zs[l], linearCaches[l], Activation.ReLu);
+                Console.WriteLine("layer: " + l);
+                Tuple<MatrixVectors, MatrixVectors, MatrixVectors> deriv = ActivationsBackward(dAPrev, Zs[l - 1], linearCaches[l - 1], Activation.ReLu);
                 MatrixVectors dW = deriv.Item1;
                 MatrixVectors db = deriv.Item2;
-                MatrixVectors dAPrev = deriv.Item3;
+                dAPrev = deriv.Item3;
                 gradients.Add("dW" + l, dW);
                 gradients.Add("db" + l, db);
-                gradients.Add("dA" + l, dAPrev);
             }
 
             return gradients;
         }
 
-        public Dictionary<string, MatrixVectors> UpdateParameters(Dictionary<string, MatrixVectors> parameters, Dictionary<string, MatrixVectors> gradients, int[] dims, int learningRate)
+        public Dictionary<string, MatrixVectors> UpdateParameters(Dictionary<string, MatrixVectors> parameters, Dictionary<string, MatrixVectors> gradients, int[] dims, float learningRate)
         {
             for(int l = 1; l < dims.Length; l++)
             {
                 MatrixVectors dWxLearningRate = MatrixCalculations.BroadcastScalar(gradients["dW" + l], learningRate, Operation.Multiply);
-                MatrixVectors dbxLearningRate = MatrixCalculations.BroadcastScalar(gradients["dW" + l], learningRate, Operation.Multiply);
-
+                MatrixVectors dbxLearningRate = MatrixCalculations.BroadcastScalar(gradients["db" + l], learningRate, Operation.Multiply);
                 parameters["W" + l] = MatrixCalculations.MatrixElementWise(parameters["W" + l], dWxLearningRate, Operation.Subtract);
-                parameters["b" + l] = MatrixCalculations.MatrixElementWise(parameters["b" + 1], dbxLearningRate, Operation.Subtract);
+                parameters["b" + l] = MatrixCalculations.MatrixElementWise(parameters["b" + l], dbxLearningRate, Operation.Subtract);
             }
 
             return parameters;

@@ -34,7 +34,7 @@ namespace ANN
         {
             if(matrix_1.columns != matrix_2.columns || matrix_1.rows != matrix_2.rows)
             {
-                Console.WriteLine("Cannot do Matrix element wise multiplications");
+                Console.WriteLine("Cannot do Matrix element wise multiplications " + methodCalled);
                 return null;
             }
 

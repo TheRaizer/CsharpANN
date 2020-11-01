@@ -17,33 +17,26 @@ namespace ANN
 
         static void Main(string[] args)
         {
-            //ANNTest();
+            ANNTest();
             //InputTest();
-            Console.Write("W_X1: ");
-            int columns_1 = int.Parse(Console.ReadLine());//columns is equal to the x value of a grid
-            Console.Write("W_Y1: ");
-            int rows_1 = int.Parse(Console.ReadLine());//rows is equal to the y value of the grid
-            Console.Write("axis: ");
-            int axis = int.Parse(Console.ReadLine());
-
-            MatrixVectors matrix = new MatrixVectors(rows_1, columns_1);
-            matrix.InputValuesIntoMatrix();
-
-            MatrixVectors matrixSummed = MatrixCalculations.MatrixAxisSummation(matrix, axis);
-            matrixSummed.OutputMatrixValue();
         }
 
         private static void ANNTest()
         {
-            int[] dims = { 3, 2, 1 };
-            neuralNetwork.InitalizeParameters(dims);
+            Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
+            int[] dims = { 3, 2, 2, 1 };
+            theta = neuralNetwork.InitalizeParameters(dims);
             MatrixVectors inputVector = new MatrixVectors(dims[0], 1);
-
-            for(int y = 0; y < inputVector.columns; y++)
+            MatrixVectors outputVector = new MatrixVectors(1, 1);
+            outputVector.MatrixVector[0, 0] = 1;
+            for (int y = 0; y < inputVector.columns; y++)
             {
                 inputVector.MatrixVector[0, y] = (float)(rand.NextDouble() * (0.1 + 0.1) - 0.1);
             }
-            neuralNetwork.ForwardPropagation(inputVector, neuralNetwork.theta, dims);
+
+            Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = neuralNetwork.ForwardPropagation(inputVector, theta, dims);
+            Dictionary<string, MatrixVectors> gradients = neuralNetwork.BackwardPropagation(outputVector, cachesAndAL.Item3, cachesAndAL.Item1, cachesAndAL.Item2);
+            theta = neuralNetwork.UpdateParameters(theta, gradients, dims, 0.001f);
         }
 
         private static void InputTest()
@@ -80,7 +73,7 @@ namespace ANN
             }
             else if (matrix_calc == "element")
             {
-                MatrixVectors matrix = MatrixCalculations.MatrixElementWise(matrix_W, vector_X, Operation.Multiply);
+                MatrixVectors matrix = MatrixCalculations.MatrixElementWise(matrix_W, vector_X, Operation.Multiply, "input test");
                 matrix.OutputMatrixValue();
             }
             else if (matrix_calc == "scalar add")
