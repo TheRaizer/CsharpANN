@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 
 namespace ANN
 {
@@ -20,7 +19,7 @@ namespace ANN
 
         static void Main(string[] args)
         {
-            int[] dims = { 3, 2, 1 };
+            int[] dims = { 3, 3, 2, 1 };
             //ANNTraining(dims);
             ANNPredictions(dims);
         }
@@ -35,39 +34,44 @@ namespace ANN
 
             for (int i = 0; i < numberOfPredictions; i++)
             {
-                int num = rand.Next(0, 2);
                 for (int y = 0; y < dims[0]; y++)
                 {
+                    int num = rand.Next(-10, 11);
                     input.MatrixVector[0, y] = num;
                 }
-                output.MatrixVector[0, 0] = num;
-                Console.WriteLine("Expected: " + num);
+
+                output.MatrixVector[0, 0] = MatrixCalculations.MatrixSummation(input) > 0 ? 1 : 0;
+                Console.Write("Input: " + i);
+                input.OutputMatrixValue();
+                Console.WriteLine("Sum: " + MatrixCalculations.MatrixSummation(input)); 
+                Console.WriteLine("Expected: " + output.MatrixVector[0, 0]);
                 Dictionary<string, MatrixVectors> theta = JsonConvert.DeserializeObject< Dictionary<string, MatrixVectors>>(File.ReadAllText("C:\\Users/Admin/source/repos/ANN/ANN/Theta.json"));
-                neuralNetwork.Predict(input, theta, dims);
+                MatrixVectors outputMatrix = neuralNetwork.Predict(input, theta, dims);
+                Console.WriteLine("Exact prediction: " + outputMatrix.MatrixVector[0, 0]);
             }
         }
 
         private static void ANNTraining(int[] dims)
         {
-            int iterations = 1000;
+            int iterations = 500;
             
             Dictionary<string, MatrixVectors> theta = neuralNetwork.InitalizeParameters(dims);
 
             List<MatrixVectors> X_training = new List<MatrixVectors>();
             List<MatrixVectors> Y_training = new List<MatrixVectors>();
-            int numberOfTrainingExamples = 100;
+            int numberOfTrainingExamples = 150;
 
             Console.WriteLine("Initializing training examples...");
             for (int i = 0; i < numberOfTrainingExamples; i++)
             {
                 MatrixVectors inputVector = new MatrixVectors(dims[0], 1);
                 MatrixVectors outputVector = new MatrixVectors(1, 1);
-                int num = rand.Next(0, 2);
+                int num = rand.Next(-10, 11);
                 for (int y = 0; y < dims[0]; y++)
                 {
                     inputVector.MatrixVector[0, y] = num;
                 }
-                outputVector.MatrixVector[0, 0] = num;
+                outputVector.MatrixVector[0, 0] = MatrixCalculations.MatrixSummation(inputVector) > 0 ? 1 : 0;
                 X_training.Add(inputVector);
                 Y_training.Add(outputVector);
             }
@@ -88,30 +92,11 @@ namespace ANN
                     Console.WriteLine("Cost at iteration: " + b + " = " + cost);
             }
 
-            Console.WriteLine("Predicting0...");
-            MatrixVectors input = new MatrixVectors(dims[0], 1);
-            MatrixVectors output = new MatrixVectors(1, 1);
-            for (int y = 0; y < dims[0]; y++)
+            Console.Write("Save theta? ");
+            string save = Console.ReadLine();
+            if(save == "yes")
             {
-                input.MatrixVector[0, y] = 0;
-            }
-            output.MatrixVector[0, 0] = 0;
-            Console.WriteLine("Expected: " + 0);
-            neuralNetwork.Predict(input, theta, dims);
-
-            Console.WriteLine("Predicting1...");
-            for (int y = 0; y < dims[0]; y++)
-            {
-                input.MatrixVector[0, y] = 1;
-            }
-            output.MatrixVector[0, 0] = 1;
-            Console.WriteLine("Expected: " + 1);
-            neuralNetwork.Predict(input, theta, dims);
-
-            string choice = Console.ReadLine();
-            if(choice == "save")
-            {
-                string jsonString = JsonConvert.SerializeObject(theta);
+                string jsonString = JsonConvert.SerializeObject(theta, Formatting.Indented);
                 File.WriteAllText("C:\\Users/Admin/source/repos/ANN/ANN/Theta.json", jsonString);
             }
         }

@@ -5,7 +5,7 @@ namespace ANN
 {
     public class NeuralNetwork
     {
-        public MatrixVectors Sigmoid(MatrixVectors z)
+        private MatrixVectors Sigmoid(MatrixVectors z)
         {
             //This method does the sigmoid calculation equivalent to 1 / (1 + np.Exp(-z)) in python
 
@@ -22,8 +22,14 @@ namespace ANN
             return activationsVector;
         }
 
-        public MatrixVectors SigmoidBackward(MatrixVectors dA, MatrixVectors Z)
+        private MatrixVectors SigmoidPrime(MatrixVectors dA, MatrixVectors Z)
         {
+            ///<summary>
+            /// Calculates the derivative of the Z in relation to the cross entropy
+            /// cost function assuming A of the same layer as Z was calculated using the 
+            /// Sigmoid function.
+            ///</summary>
+            
             MatrixVectors A_prev = Sigmoid(Z);
             MatrixVectors OneMinusA_prev = MatrixCalculations.BroadcastScalar(A_prev, 1, Operation.Subtract, true);
             MatrixVectors A_prevMultipliedByOneMinusA_prev = MatrixCalculations.MatrixElementWise(A_prev, OneMinusA_prev, Operation.Multiply);
@@ -32,8 +38,14 @@ namespace ANN
             return dZ;
         }
 
-        public MatrixVectors ReLuBackward(MatrixVectors dA, MatrixVectors Z)
+        private MatrixVectors ReLuPrime(MatrixVectors dA, MatrixVectors Z)
         {
+            ///<summary>
+            /// Calculates the derivative of the Z in relation to the cross entropy
+            /// cost function assuming A of the same layer as Z was calculated using the 
+            /// ReLu function.
+            ///</summary>
+           
             MatrixVectors dZ = dA;
             if (!dZ.CompareShape(Z) || !Z.CompareShape(dA))
             {
@@ -56,6 +68,11 @@ namespace ANN
 
         public Dictionary<string, MatrixVectors> InitalizeParameters(int[] dims)
         {
+            ///<summary>
+            /// Initializes the parameters and returns them as a dictionary
+            /// the string represents the name of the parameter as W[l] or b[l].
+            ///</summary>
+            
             Dictionary<string, MatrixVectors> theta = new Dictionary<string, MatrixVectors>();
             for (int l = 1; l < dims.Length; l++)
             {
@@ -113,6 +130,7 @@ namespace ANN
                     throw new ArgumentOutOfRangeException();
             }
             LinearCache linearCache = cache.Item1;
+
             return new Tuple<LinearCache, MatrixVectors, MatrixVectors>(linearCache, z, activationsVector);
         }
 
@@ -197,8 +215,17 @@ namespace ANN
             return crossEntropyCost;
         }
 
-        public Tuple<MatrixVectors, MatrixVectors, MatrixVectors> LinearBackward(MatrixVectors dZ, LinearCache linearCache)
+        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> LinearBackward(MatrixVectors dZ, LinearCache linearCache)
         {
+            ///<summary>
+            /// This method calculates the derivatives of the parameters and the 
+            /// derivative of the previous layers activations all in relation to the
+            /// cross entropy cost function.
+            /// 
+            /// This method will return the derivatives in order to calculate
+            /// gradient descent as well as the other dW's and db's.
+            ///</summary>
+            
             MatrixVectors dW = MatrixCalculations.Dot(dZ, MatrixCalculations.Transpose(linearCache.previousLayersActivations));
             MatrixVectors db = MatrixCalculations.MatrixAxisSummation(dZ, 1);
             MatrixVectors dAPrev = MatrixCalculations.Dot(MatrixCalculations.Transpose(linearCache.weights), dZ);
@@ -218,16 +245,24 @@ namespace ANN
             return new Tuple<MatrixVectors, MatrixVectors, MatrixVectors>(dW, db, dAPrev);
         }
 
-        public Tuple<MatrixVectors, MatrixVectors, MatrixVectors> ActivationsBackward(MatrixVectors dA, MatrixVectors Z, LinearCache linearCache, Activation activation)
+        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> ActivationsBackward(MatrixVectors dA, MatrixVectors Z, LinearCache linearCache, Activation activation)
         {
+            ///<summary>
+            /// This method will calculate dC with respect to Z from one of the specified activations
+            /// then use this dC/dZ to calculate the other derivatives.
+            /// 
+            /// It will then return the derivatives provided from the 
+            /// LinearBackward function.
+            ///</summary>
+            
             MatrixVectors dZ;
             switch (activation)
             {
                 case Activation.Sigmoid:
-                    dZ = SigmoidBackward(dA, Z);
+                    dZ = SigmoidPrime(dA, Z);
                     break;
                 case Activation.ReLu:
-                    dZ = ReLuBackward(dA, Z);
+                    dZ = ReLuPrime(dA, Z);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -238,6 +273,22 @@ namespace ANN
         
         public Dictionary<string, MatrixVectors> BackwardPropagation(MatrixVectors Y, MatrixVectors AL, List<LinearCache> linearCache, List<MatrixVectors> zCache)
         {
+            ///<summary>
+            /// This method calculates all the derivatives for each layer in the neural network.
+            /// It starts by calculating derivative of the cost function
+            /// with respect to the predictions yhat.
+            /// After this it will go through each layer starting from the last
+            /// calculating the derivative of the cost function with respect to 
+            /// W, b, and A of the previous layer.
+            /// 
+            /// dW and db will be used for updating the parameters.
+            /// 
+            /// dA of the previous layer is used to calculate the previous layers derivatives.
+            /// 
+            /// dW is the same as dC/dW
+            /// db is equivalent is dC/db etc.
+            ///</summary>
+            
             Dictionary<string, MatrixVectors> gradients = new Dictionary<string, MatrixVectors>();
             List<LinearCache> linearCaches = linearCache;
             List<MatrixVectors> Zs = zCache;
@@ -273,6 +324,18 @@ namespace ANN
 
         public Dictionary<string, MatrixVectors> UpdateParameters(Dictionary<string, MatrixVectors> parameters, Dictionary<string, MatrixVectors> gradients, int[] dims, float learningRate)
         {
+            ///<summary>
+            /// This method uses the gradients which are the derivatives dW and db of each layer
+            /// to update the parameters W and b.
+            /// 
+            /// The reason gradient descent uses derivatives is because they represent
+            /// the direction of steepest ascent on a functions surface. We minus them from the
+            /// parameters because we want the steepest descent. And the learning rate just modulates
+            /// how far we will move in that direction.
+            /// 
+            /// This method will return the updated parameters.
+            ///</summary>
+            
             for(int l = 1; l < dims.Length; l++)
             {
                 MatrixVectors dWxLearningRate = MatrixCalculations.BroadcastScalar(gradients["dW" + l], learningRate, Operation.Multiply);
@@ -284,11 +347,25 @@ namespace ANN
             return parameters;
         }
 
-        public void Predict(MatrixVectors input, Dictionary<string, MatrixVectors> theta, int[] dims)
+        public MatrixVectors Predict(MatrixVectors input, Dictionary<string, MatrixVectors> theta, int[] dims)
         {
+            ///<summary>
+            /// Predicts a given input vector and theta. It uses ForwardPropagation to
+            /// predict. Theta is usually the most updated theta.
+            /// 
+            /// When predicting we round the values. If it is greater then 0.5
+            /// round to 1 else round to 0.
+            /// 
+            /// return the exact prediction of the network as well as printing the
+            /// rounded prediction.
+            ///</summary>
+            
             Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = ForwardPropagation(input, theta, dims);
-            Console.WriteLine("Prediction: ");
-            cachesAndAL.Item3.OutputMatrixValue();
+            Console.Write("Prediction: ");
+            int predic = cachesAndAL.Item3.MatrixVector[0, 0] > 0.5 ? 1 : 0;
+            Console.WriteLine(predic);
+
+            return cachesAndAL.Item3;
         }
     }
 }
