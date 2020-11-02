@@ -25,11 +25,10 @@ namespace ANN
         private MatrixVectors SigmoidPrime(MatrixVectors dA, MatrixVectors Z)
         {
             ///<summary>
-            /// Calculates the derivative of the Z in relation to the cross entropy
-            /// cost function assuming A of the same layer as Z was calculated using the 
-            /// Sigmoid function.
+            /// Calculates the derivative of the cross entropy cost functionin relation to Z
+            /// assuming A of the same layer as Z was calculated using the Sigmoid function.
             ///</summary>
-            
+
             MatrixVectors A_prev = Sigmoid(Z);
             MatrixVectors OneMinusA_prev = MatrixCalculations.BroadcastScalar(A_prev, 1, Operation.Subtract, true);
             MatrixVectors A_prevMultipliedByOneMinusA_prev = MatrixCalculations.MatrixElementWise(A_prev, OneMinusA_prev, Operation.Multiply);
@@ -41,11 +40,11 @@ namespace ANN
         private MatrixVectors ReLuPrime(MatrixVectors dA, MatrixVectors Z)
         {
             ///<summary>
-            /// Calculates the derivative of the Z in relation to the cross entropy
-            /// cost function assuming A of the same layer as Z was calculated using the 
-            /// ReLu function.
+            /// Calculates the derivative of the cross entropy
+            /// cost function in relation to Z assuming A of the same layer as Z was 
+            /// calculated using the ReLu function.
             ///</summary>
-           
+
             MatrixVectors dZ = dA;
             if (!dZ.CompareShape(Z) || !Z.CompareShape(dA))
             {

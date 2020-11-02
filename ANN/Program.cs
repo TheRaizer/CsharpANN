@@ -20,8 +20,17 @@ namespace ANN
         static void Main(string[] args)
         {
             int[] dims = { 3, 3, 2, 1 };
-            //ANNTraining(dims);
-            ANNPredictions(dims);
+            string choice = Console.ReadLine();
+            if (choice == "train")
+            {
+                ANNTraining(dims);
+            }
+            else if (choice == "predict")
+            {
+                ANNPredictions(dims);
+            }
+            else
+                return;
         }
 
         private static void ANNPredictions(int[] dims)
@@ -75,6 +84,7 @@ namespace ANN
                 X_training.Add(inputVector);
                 Y_training.Add(outputVector);
             }
+
             Console.WriteLine("Starting network...");
             for (int b = 0; b < iterations; b++) 
             {
