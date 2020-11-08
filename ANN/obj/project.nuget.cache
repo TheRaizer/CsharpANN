@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "Wmmb/shAfL+wVdg8dMJnUxVb+0n0bGw9/Ob4iFfw4fe9whA8ZXQbLyll48FRIOCLwDZxLyLsXp0TRRPKR6vPcA==",
+  "dgSpecHash": "gsWuruzZMcUHtSG4TUeNvkdp2qd4tAgmOOAIsxYLhqRljQjqgDUww+OqcuLRzYc4TzIsTek4jfnk0LYuestd7A==",
   "success": true,
   "projectFilePath": "C:\\Users\\Admin\\source\\repos\\ANN\\ANN\\ANN.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512"
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.win32.systemevents\\4.7.0\\microsoft.win32.systemevents.4.7.0.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\system.drawing.common\\4.7.0\\system.drawing.common.4.7.0.nupkg.sha512"
   ],
   "logs": []
 }

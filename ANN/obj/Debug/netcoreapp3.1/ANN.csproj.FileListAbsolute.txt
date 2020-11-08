@@ -11,5 +11,10 @@ C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.dll
 C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.pdb
 C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.genruntimeconfig.cache
 C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\Newtonsoft.Json.dll
-C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.csproj.CoreCompileInputs.cache
 C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.csproj.CopyComplete
+C:\Users\Admin\source\repos\ANN\ANN\obj\Debug\netcoreapp3.1\ANN.csproj.CoreCompileInputs.cache
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\Microsoft.Win32.SystemEvents.dll
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\System.Drawing.Common.dll
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\runtimes\win\lib\netcoreapp3.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\runtimes\unix\lib\netcoreapp3.0\System.Drawing.Common.dll
+C:\Users\Admin\source\repos\ANN\ANN\bin\Debug\netcoreapp3.1\runtimes\win\lib\netcoreapp3.0\System.Drawing.Common.dll

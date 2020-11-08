@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ANN
 {
@@ -14,12 +15,12 @@ namespace ANN
 
             MatrixVectors outputMatrix = new MatrixVectors(matrix_1.rows, matrix_2.columns);//the output matrix uses the columns of the second matrix and the rows of the first
 
-            for(int c = 0; c < matrix_2.columns; c++)
+            for (int c = 0; c < matrix_2.columns; c++)
             {
-                for(int y = 0; y < matrix_1.rows; y++)
+                for (int y = 0; y < matrix_1.rows; y++)
                 {
                     float value = 0;
-                    for(int x = 0; x < matrix_1.columns; x++)
+                    for (int x = 0; x < matrix_1.columns; x++)
                     {
                         value += matrix_1.MatrixVector[x, y] * matrix_2.MatrixVector[c, x];
                     }
@@ -32,7 +33,7 @@ namespace ANN
 
         public static MatrixVectors MatrixElementWise(MatrixVectors matrix_1, MatrixVectors matrix_2, Operation operation)
         {
-            if(matrix_1.columns != matrix_2.columns || matrix_1.rows != matrix_2.rows)
+            if (matrix_1.columns != matrix_2.columns || matrix_1.rows != matrix_2.rows)
             {
                 Console.WriteLine("Cannot do Matrix element wise multiplications ");
                 return null;
@@ -83,8 +84,8 @@ namespace ANN
             /// axis = 1 returns a column vector of all the columns summed together.
             /// In numpy this is equivalent to np.sum with KeepDims always True.
             ///</summary>
-            
-            if(axis == 0)
+
+            if (axis == 0)
             {
                 MatrixVectors summedOverColumns = new MatrixVectors(1, matrix.columns);
                 for (int x = 0; x < matrix.columns; x++)
@@ -96,7 +97,7 @@ namespace ANN
                 }
                 return summedOverColumns;
             }
-            else if(axis == 1)
+            else if (axis == 1)
             {
                 MatrixVectors summedOverRows = new MatrixVectors(matrix.rows, 1);
                 for (int y = 0; y < matrix.rows; y++)
@@ -117,11 +118,25 @@ namespace ANN
         public static MatrixVectors Exp(MatrixVectors matrix)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
-            for(int y = 0; y < matrix.rows; y++)
+            for (int y = 0; y < matrix.rows; y++)
             {
-                for(int x = 0; x < matrix.columns; x++)
+                for (int x = 0; x < matrix.columns; x++)
                 {
-                    outputMatrix.MatrixVector[x, y] = (float)(Math.Pow(Math.E, matrix.MatrixVector[x, y]));
+                    outputMatrix.MatrixVector[x, y] = (float)Math.Pow(Math.E, matrix.MatrixVector[x, y]);
+                }
+            }
+
+            return outputMatrix;
+        }
+
+        public static MatrixVectors Square(MatrixVectors matrix)
+        {
+            MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
+            for (int y = 0; y < matrix.rows; y++)
+            {
+                for (int x = 0; x < matrix.columns; x++)
+                {
+                    outputMatrix.MatrixVector[x, y] = (float)Math.Pow(matrix.MatrixVector[x, y], 2);
                 }
             }
 
@@ -132,7 +147,7 @@ namespace ANN
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
 
-            for(int y = 0; y < matrix.rows; y++)
+            for (int y = 0; y < matrix.rows; y++)
             {
                 for (int x = 0; x < matrix.columns; x++)
                 {
@@ -142,7 +157,7 @@ namespace ANN
                             outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] + scalar;
                             break;
                         case Operation.Subtract:
-                            if(reverse)
+                            if (reverse)
                                 outputMatrix.MatrixVector[x, y] = scalar - matrix.MatrixVector[x, y];
                             else
                                 outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] - scalar;
@@ -151,7 +166,7 @@ namespace ANN
                             outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] * scalar;
                             break;
                         case Operation.Divide:
-                            if(reverse)
+                            if (reverse)
                                 outputMatrix.MatrixVector[x, y] = scalar / matrix.MatrixVector[x, y];
                             else
                                 outputMatrix.MatrixVector[x, y] = matrix.MatrixVector[x, y] / scalar;
@@ -174,7 +189,7 @@ namespace ANN
             MatrixVectors maximizedMatrix = new MatrixVectors(matrix_1.rows, matrix_1.columns);
             for (int y = 0; y < maximizedMatrix.rows; y++)
             {
-                for(int x = 0; x < maximizedMatrix.columns; x++)
+                for (int x = 0; x < maximizedMatrix.columns; x++)
                 {
                     if (matrix_2 != null)
                     {
@@ -194,15 +209,108 @@ namespace ANN
         {
             MatrixVectors matrixTranspose = new MatrixVectors(matrix.columns, matrix.rows);
 
-            for(int y = 0; y < matrixTranspose.rows; y++)
+            for (int y = 0; y < matrixTranspose.rows; y++)
             {
-                for(int x = 0; x < matrixTranspose.columns; x++)
+                for (int x = 0; x < matrixTranspose.columns; x++)
                 {
                     matrixTranspose.MatrixVector[x, y] = matrix.MatrixVector[y, x];
                 }
             }
 
             return matrixTranspose;
+        }
+
+        public static MatrixVectors Flatten(MatrixVectors matrix, int axis)
+        {
+            ///<summary>
+            /// axis = 0 returns a row vector.
+            /// axis = 1 returns a column vector.
+            ///</summary>
+
+            MatrixVectors flattenedMatrix;
+
+
+            int index = 0;
+
+            if (axis == 0)
+            {
+                flattenedMatrix = new MatrixVectors(1, matrix.rows * matrix.columns);
+                for (int y = 0; y < matrix.rows; y++)
+                {
+                    for (int x = 0; x < matrix.columns; x++)
+                    {
+                        flattenedMatrix.MatrixVector[index, 0] = matrix.MatrixVector[x, y];
+                        index++;
+                    }
+                }
+            }
+            else if (axis == 1)
+            {
+                flattenedMatrix = new MatrixVectors(matrix.rows * matrix.columns, 1);
+
+                for (int y = 0; y < matrix.rows; y++)
+                {
+                    for (int x = 0; x < matrix.columns; x++)
+                    {
+                        flattenedMatrix.MatrixVector[0, index] = matrix.MatrixVector[x, y];
+                        index++;
+                    }
+                }
+            }
+            else
+                return null;
+
+            return flattenedMatrix;
+        }
+
+        public static MatrixVectors ListToVector(List<float> list, int axis)
+        {
+            MatrixVectors vector;
+
+            if (axis == 0)
+            {
+                vector = new MatrixVectors(1, list.Count);
+                for (int x = 0; x < list.Count; x++)
+                {
+                    vector.MatrixVector[x, 0] = list[x];
+                }
+            }
+            else if (axis == 1)
+            {
+                vector = new MatrixVectors(list.Count, 1);
+                for (int y = 0; y < list.Count; y++)
+                {
+                    vector.MatrixVector[0, y] = list[y];
+                }
+            }
+            else
+                return null;
+
+            return vector;
+        }
+
+        public static Tuple<List<T>, List<T>> RandomizeListUnison<T>(List<T> list1, List<T> list2)
+        {
+            if (list1.Count != list2.Count)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            int i = list1.Count;
+            while (i > 1)
+            {
+                i--;
+                int k = Program.rand.Next(i + 1);
+                T value1 = list1[k];
+                list1[k] = list1[i];
+                list1[i] = value1;
+
+                T value2 = list2[k];
+                list2[k] = list2[i];
+                list2[i] = value2;
+            }
+
+            return new Tuple<List<T>, List<T>>(list1, list2);
         }
     }
 }

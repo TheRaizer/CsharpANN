@@ -5,6 +5,36 @@ namespace ANN
 {
     public class NeuralNetwork
     {
+        public List<Tuple<List<MatrixVectors>, List<MatrixVectors>>> GenerateBatches(int batchCount, List<MatrixVectors> data, List<MatrixVectors> labels)
+        {
+            if(data.Count != labels.Count)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            int dataIndex = 0;
+            int numberOfBatches = (int)Math.Ceiling((double)data.Count / batchCount);
+
+            List<Tuple<List<MatrixVectors>, List<MatrixVectors>>> batches = new List<Tuple<List<MatrixVectors>, List<MatrixVectors>>>();
+
+            for (int b = 0; b < numberOfBatches; b++)
+            {
+                List<MatrixVectors> currentInputBatch = new List<MatrixVectors>();
+                List<MatrixVectors> currentLabelBatch = new List<MatrixVectors>();
+                int batchCountToReach = dataIndex + batchCount;
+                batchCountToReach = batchCountToReach > data.Count ? data.Count : batchCountToReach;
+
+                for (int i = dataIndex; i < batchCountToReach; i++)
+                {
+                    currentInputBatch.Add(data[i]);
+                    currentLabelBatch.Add(labels[i]);
+                }
+                Tuple<List<MatrixVectors>, List<MatrixVectors>> currentBatch = MatrixCalculations.RandomizeListUnison(currentInputBatch, currentLabelBatch);
+                batches.Add(currentBatch);
+                dataIndex += batchCount;
+            }
+            return batches;
+        }
+
         private MatrixVectors Sigmoid(MatrixVectors z)
         {
             //This method does the sigmoid calculation equivalent to 1 / (1 + np.Exp(-z)) in python
@@ -76,6 +106,7 @@ namespace ANN
             for (int l = 1; l < dims.Length; l++)
             {
                 MatrixVectors weights = new MatrixVectors(dims[l], dims[l - 1]);
+                weights = MatrixCalculations.BroadcastScalar(weights, (float)Math.Sqrt(1 / dims[l - 1]), Operation.Multiply);
                 MatrixVectors bias = new MatrixVectors(dims[l], 1);
 
                 weights.InitializeRandom();
@@ -95,7 +126,7 @@ namespace ANN
             /// It returns the linear cache which holds the weights, bias and the previous layers activations
             /// along with the Z.
             ///</summary>
-           
+
             MatrixVectors z = MatrixCalculations.MatrixElementWise(MatrixCalculations.Dot(weights, previousLayersActivations), bias, Operation.Add);
             LinearCache linearCache = new LinearCache(weights, bias, previousLayersActivations);
 
@@ -185,7 +216,7 @@ namespace ANN
             return cachesAndActivation;
         }
 
-        public float ComputeCost(MatrixVectors yhat, MatrixVectors _y)
+        public float ComputeCost(MatrixVectors yhat, MatrixVectors _y, float lambda, Dictionary<string, MatrixVectors> theta, int[] dims)
         {
             ///<summary>
             /// This method uses the cross entropy cost function to caculate the losses.
@@ -202,7 +233,6 @@ namespace ANN
             }
 
             float crossEntropyCost = 0;
-
             for(int y = 0; y < _y.rows; y++)
             {
                 float currentYhat = yhat.MatrixVector[0, y];
@@ -214,7 +244,7 @@ namespace ANN
             return crossEntropyCost;
         }
 
-        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> LinearBackward(MatrixVectors dZ, LinearCache linearCache)
+        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> LinearBackward(MatrixVectors dZ, LinearCache linearCache, float lambda)
         {
             ///<summary>
             /// This method calculates the derivatives of the parameters and the 
@@ -224,7 +254,7 @@ namespace ANN
             /// This method will return the derivatives in order to calculate
             /// gradient descent as well as the other dW's and db's.
             ///</summary>
-            
+
             MatrixVectors dW = MatrixCalculations.Dot(dZ, MatrixCalculations.Transpose(linearCache.previousLayersActivations));
             MatrixVectors db = MatrixCalculations.MatrixAxisSummation(dZ, 1);
             MatrixVectors dAPrev = MatrixCalculations.Dot(MatrixCalculations.Transpose(linearCache.weights), dZ);
@@ -244,7 +274,7 @@ namespace ANN
             return new Tuple<MatrixVectors, MatrixVectors, MatrixVectors>(dW, db, dAPrev);
         }
 
-        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> ActivationsBackward(MatrixVectors dA, MatrixVectors Z, LinearCache linearCache, Activation activation)
+        private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> ActivationsBackward(MatrixVectors dA, MatrixVectors Z, LinearCache linearCache, Activation activation, float lambda)
         {
             ///<summary>
             /// This method will calculate dC with respect to Z from one of the specified activations
@@ -267,10 +297,10 @@ namespace ANN
                     throw new ArgumentOutOfRangeException();
             }
 
-            return LinearBackward(dZ, linearCache);
+            return LinearBackward(dZ, linearCache, lambda);
         }
         
-        public Dictionary<string, MatrixVectors> BackwardPropagation(MatrixVectors Y, MatrixVectors AL, List<LinearCache> linearCache, List<MatrixVectors> zCache)
+        public Dictionary<string, MatrixVectors> BackwardPropagation(MatrixVectors Y, MatrixVectors AL, List<LinearCache> linearCache, List<MatrixVectors> zCache, float lambda)
         {
             ///<summary>
             /// This method calculates all the derivatives for each layer in the neural network.
@@ -300,7 +330,7 @@ namespace ANN
             MatrixVectors dAL_P1 = MatrixCalculations.MatrixElementWise(YDividedByAL, OneMinusYDividedByOneMinusAL, Operation.Subtract);
 
             MatrixVectors dAL = MatrixCalculations.BroadcastScalar(dAL_P1, -1, Operation.Multiply);
-            Tuple<MatrixVectors, MatrixVectors, MatrixVectors> derivatives = ActivationsBackward(dAL, Zs[layersCount - 1], linearCaches[layersCount - 1], Activation.Sigmoid);
+            Tuple<MatrixVectors, MatrixVectors, MatrixVectors> derivatives = ActivationsBackward(dAL, Zs[layersCount - 1], linearCaches[layersCount - 1], Activation.Sigmoid, lambda);
             MatrixVectors dWL = derivatives.Item1;
             MatrixVectors dbL = derivatives.Item2;
             MatrixVectors dAPrev = derivatives.Item3;
@@ -310,7 +340,7 @@ namespace ANN
 
             for (int l = layersCount - 1; l > 0; l--)
             {
-                Tuple<MatrixVectors, MatrixVectors, MatrixVectors> deriv = ActivationsBackward(dAPrev, Zs[l - 1], linearCaches[l - 1], Activation.ReLu);
+                Tuple<MatrixVectors, MatrixVectors, MatrixVectors> deriv = ActivationsBackward(dAPrev, Zs[l - 1], linearCaches[l - 1], Activation.ReLu, lambda);
                 MatrixVectors dW = deriv.Item1;
                 MatrixVectors db = deriv.Item2;
                 dAPrev = deriv.Item3;
@@ -346,7 +376,7 @@ namespace ANN
             return parameters;
         }
 
-        public MatrixVectors Predict(MatrixVectors input, Dictionary<string, MatrixVectors> theta, int[] dims)
+        public void Predict(List<MatrixVectors> inputs, List<int> trueLabels, Dictionary<string, MatrixVectors> theta, int[] dims)
         {
             ///<summary>
             /// Predicts a given input vector and theta. It uses ForwardPropagation to
@@ -358,13 +388,27 @@ namespace ANN
             /// return the exact prediction of the network as well as printing the
             /// rounded prediction.
             ///</summary>
-            
-            Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = ForwardPropagation(input, theta, dims);
-            Console.Write("Prediction: ");
-            int predic = cachesAndAL.Item3.MatrixVector[0, 0] > 0.5 ? 1 : 0;
-            Console.WriteLine(predic);
 
-            return cachesAndAL.Item3;
+            float num = 0;
+            float examples = inputs.Count;
+
+            for (int e = 0; e < inputs.Count; e++)
+            {
+                Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = ForwardPropagation(inputs[e], theta, dims);
+
+                Console.Write("Prediction: ");
+                int predic = cachesAndAL.Item3.MatrixVector[0, 0] > 0.5 ? 1 : 0;
+                Console.Write(predic);
+                Console.Write("Expected: ");
+                Console.Write(trueLabels[e]);
+                Console.WriteLine("");
+                if(predic == trueLabels[e])
+                {
+                    num++;
+                }
+            }
+            float accuracy = num / examples * 100;
+            Console.WriteLine("Accuracy: " + accuracy);
         }
     }
 }
