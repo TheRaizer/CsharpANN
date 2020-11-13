@@ -5,7 +5,7 @@ namespace ANN
 {
     public static class MatrixCalculations
     {
-        public static MatrixVectors Dot(MatrixVectors matrix_1, MatrixVectors matrix_2)
+        public static MatrixVectors Dot(this MatrixVectors matrix_1, MatrixVectors matrix_2)
         {
             if (matrix_1.columns != matrix_2.rows)//the number of columns in the first matrix must be equal to the number of rows in the second
             {
@@ -31,7 +31,7 @@ namespace ANN
             return outputMatrix;
         }
 
-        public static MatrixVectors MatrixElementWise(MatrixVectors matrix_1, MatrixVectors matrix_2, Operation operation)
+        public static MatrixVectors MatrixElementWise(this MatrixVectors matrix_1, MatrixVectors matrix_2, Operation operation)
         {
             if (matrix_1.columns != matrix_2.columns || matrix_1.rows != matrix_2.rows)
             {
@@ -77,7 +77,7 @@ namespace ANN
             return sum;
         }
 
-        public static MatrixVectors MatrixAxisSummation(MatrixVectors matrix, int axis)
+        public static MatrixVectors MatrixAxisSummation(this MatrixVectors matrix, int axis)
         {
             ///<summary>
             /// axis = 0 returns a row vector of all the rows summed together.
@@ -115,7 +115,7 @@ namespace ANN
             }
         }
 
-        public static MatrixVectors Exp(MatrixVectors matrix)
+        public static MatrixVectors Exp(this MatrixVectors matrix)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
             for (int y = 0; y < matrix.rows; y++)
@@ -129,7 +129,7 @@ namespace ANN
             return outputMatrix;
         }
 
-        public static MatrixVectors Square(MatrixVectors matrix)
+        public static MatrixVectors Square(this MatrixVectors matrix)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
             for (int y = 0; y < matrix.rows; y++)
@@ -143,7 +143,7 @@ namespace ANN
             return outputMatrix;
         }
 
-        public static MatrixVectors BroadcastScalar(MatrixVectors matrix, float scalar, Operation operation, bool reverse = false)
+        public static MatrixVectors BroadcastScalar(this MatrixVectors matrix, float scalar, Operation operation, bool reverse = false)
         {
             MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
 
@@ -205,7 +205,22 @@ namespace ANN
             return maximizedMatrix;
         }
 
-        public static MatrixVectors Transpose(MatrixVectors matrix)
+        public static MatrixVectors Sqrt(this MatrixVectors matrix)
+        {
+            MatrixVectors outputMatrix = new MatrixVectors(matrix.rows, matrix.columns);
+
+            for(int y = 0; y < matrix.rows; y++)
+            {
+                for(int x = 0; x < matrix.columns; x++)
+                {
+                    outputMatrix.MatrixVector[x, y] = (float)Math.Sqrt(matrix.MatrixVector[x, y]);
+                }
+            }
+
+            return outputMatrix;
+        }
+
+        public static MatrixVectors Transpose(this MatrixVectors matrix)
         {
             MatrixVectors matrixTranspose = new MatrixVectors(matrix.columns, matrix.rows);
 
@@ -220,7 +235,7 @@ namespace ANN
             return matrixTranspose;
         }
 
-        public static MatrixVectors Flatten(MatrixVectors matrix, int axis)
+        public static MatrixVectors Flatten(this MatrixVectors matrix, int axis)
         {
             ///<summary>
             /// axis = 0 returns a row vector.
@@ -263,7 +278,7 @@ namespace ANN
             return flattenedMatrix;
         }
 
-        public static MatrixVectors ListToVector(List<float> list, int axis)
+        public static MatrixVectors ListToVector(this List<float> list, int axis)
         {
             MatrixVectors vector;
 
@@ -289,7 +304,7 @@ namespace ANN
             return vector;
         }
 
-        public static Tuple<List<T>, List<T>> RandomizeListUnison<T>(List<T> list1, List<T> list2)
+        public static Tuple<List<T>, List<T>> RandomizeListUnison<T>(this List<T> list1, List<T> list2)
         {
             if (list1.Count != list2.Count)
             {

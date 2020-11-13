@@ -5,6 +5,24 @@ namespace ANN
 {
     public class NeuralNetwork
     {
+        private readonly Dictionary<string, MatrixVectors> adamsDerivatives = new Dictionary<string, MatrixVectors>();
+
+        public NeuralNetwork(int [] dims)
+        {
+            for(int l = 1; l < dims.Length; l++)
+            {
+                MatrixVectors vdw = new MatrixVectors(dims[l], dims[l - 1]);
+                MatrixVectors vdb = new MatrixVectors(dims[l], 1);
+                MatrixVectors sdw = new MatrixVectors(dims[l], dims[l - 1]);
+                MatrixVectors sdb = new MatrixVectors(dims[l], 1);
+
+                adamsDerivatives.Add("Vdw" + l, vdw);
+                adamsDerivatives.Add("Vdb" + l, vdb);
+                adamsDerivatives.Add("Sdw" + l, sdw);
+                adamsDerivatives.Add("Sdb" + l, sdb);
+            }
+        }
+
         public List<Tuple<List<MatrixVectors>, List<MatrixVectors>>> GenerateBatches(int batchCount, List<MatrixVectors> data, List<MatrixVectors> labels)
         {
             if(data.Count != labels.Count)
@@ -28,7 +46,7 @@ namespace ANN
                     currentInputBatch.Add(data[i]);
                     currentLabelBatch.Add(labels[i]);
                 }
-                Tuple<List<MatrixVectors>, List<MatrixVectors>> currentBatch = MatrixCalculations.RandomizeListUnison(currentInputBatch, currentLabelBatch);
+                Tuple<List<MatrixVectors>, List<MatrixVectors>> currentBatch = currentInputBatch.RandomizeListUnison(currentLabelBatch);
                 batches.Add(currentBatch);
                 dataIndex += batchCount;
             }
@@ -39,9 +57,9 @@ namespace ANN
         {
             //This method does the sigmoid calculation equivalent to 1 / (1 + np.Exp(-z)) in python
 
-            MatrixVectors activationsVector = MatrixCalculations.Exp(MatrixCalculations.BroadcastScalar(z, -1, Operation.Multiply));
-            activationsVector = MatrixCalculations.BroadcastScalar(activationsVector, 1, Operation.Add);
-            activationsVector = MatrixCalculations.BroadcastScalar(activationsVector, 1, Operation.Divide, true);
+            MatrixVectors activationsVector = z.BroadcastScalar(-1, Operation.Multiply).Exp();
+            activationsVector = activationsVector.BroadcastScalar(1, Operation.Add);
+            activationsVector = activationsVector.BroadcastScalar(1, Operation.Divide, true);
             return activationsVector;
         }
 
@@ -60,9 +78,9 @@ namespace ANN
             ///</summary>
 
             MatrixVectors A_prev = Sigmoid(Z);
-            MatrixVectors OneMinusA_prev = MatrixCalculations.BroadcastScalar(A_prev, 1, Operation.Subtract, true);
-            MatrixVectors A_prevMultipliedByOneMinusA_prev = MatrixCalculations.MatrixElementWise(A_prev, OneMinusA_prev, Operation.Multiply);
-            MatrixVectors dZ = MatrixCalculations.MatrixElementWise(dA, A_prevMultipliedByOneMinusA_prev, Operation.Multiply);
+            MatrixVectors OneMinusA_prev = A_prev.BroadcastScalar(1, Operation.Subtract, true);
+            MatrixVectors A_prevMultipliedByOneMinusA_prev = A_prev.MatrixElementWise(OneMinusA_prev, Operation.Multiply);
+            MatrixVectors dZ = dA.MatrixElementWise(A_prevMultipliedByOneMinusA_prev, Operation.Multiply);
 
             return dZ;
         }
@@ -106,11 +124,10 @@ namespace ANN
             for (int l = 1; l < dims.Length; l++)
             {
                 MatrixVectors weights = new MatrixVectors(dims[l], dims[l - 1]);
-                weights = MatrixCalculations.BroadcastScalar(weights, (float)Math.Sqrt(1 / dims[l - 1]), Operation.Multiply);
+                weights = weights.BroadcastScalar((float)Math.Sqrt(1 / dims[l - 1]), Operation.Multiply);
                 MatrixVectors bias = new MatrixVectors(dims[l], 1);
 
                 weights.InitializeRandom();
-                bias.InitializeWithZeros();
 
                 theta.Add("W" + l, weights);
                 theta.Add("b" + l, bias);
@@ -127,7 +144,7 @@ namespace ANN
             /// along with the Z.
             ///</summary>
 
-            MatrixVectors z = MatrixCalculations.MatrixElementWise(MatrixCalculations.Dot(weights, previousLayersActivations), bias, Operation.Add);
+            MatrixVectors z = weights.Dot(previousLayersActivations).MatrixElementWise(bias, Operation.Add);
             LinearCache linearCache = new LinearCache(weights, bias, previousLayersActivations);
 
             return new Tuple<LinearCache, MatrixVectors>(linearCache, z);
@@ -233,6 +250,15 @@ namespace ANN
             }
 
             float crossEntropyCost = 0;
+            float regularizedCost = 0;
+
+            for(int l = 1; l < dims.Length; l++)
+            {
+                regularizedCost += MatrixCalculations.MatrixSummation(MatrixCalculations.Square(theta["W" + l]));
+            }
+
+            regularizedCost *= lambda / 2;
+
             for(int y = 0; y < _y.rows; y++)
             {
                 float currentYhat = yhat.MatrixVector[0, y];
@@ -241,7 +267,9 @@ namespace ANN
                 crossEntropyCost += currentCost;
             }
 
-            return crossEntropyCost;
+            float totalCost = crossEntropyCost + regularizedCost;
+
+            return totalCost;
         }
 
         private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> LinearBackward(MatrixVectors dZ, LinearCache linearCache, float lambda)
@@ -255,9 +283,11 @@ namespace ANN
             /// gradient descent as well as the other dW's and db's.
             ///</summary>
 
-            MatrixVectors dW = MatrixCalculations.Dot(dZ, MatrixCalculations.Transpose(linearCache.previousLayersActivations));
-            MatrixVectors db = MatrixCalculations.MatrixAxisSummation(dZ, 1);
-            MatrixVectors dAPrev = MatrixCalculations.Dot(MatrixCalculations.Transpose(linearCache.weights), dZ);
+            MatrixVectors regularizedWeight = linearCache.weights.BroadcastScalar(lambda, Operation.Multiply);
+            MatrixVectors dW = dZ.Dot(linearCache.previousLayersActivations.Transpose());
+            MatrixVectors dWRegularized = dW.MatrixElementWise(regularizedWeight, Operation.Add);
+            MatrixVectors db = dZ.MatrixAxisSummation(1);
+            MatrixVectors dAPrev = linearCache.weights.Transpose().Dot(dZ);
 
             if (!dW.CompareShape(linearCache.weights))
             {
@@ -271,7 +301,7 @@ namespace ANN
             {
                 Console.WriteLine("Does not have the right shape for dAPrev");
             }
-            return new Tuple<MatrixVectors, MatrixVectors, MatrixVectors>(dW, db, dAPrev);
+            return new Tuple<MatrixVectors, MatrixVectors, MatrixVectors>(dWRegularized, db, dAPrev);
         }
 
         private Tuple<MatrixVectors, MatrixVectors, MatrixVectors> ActivationsBackward(MatrixVectors dA, MatrixVectors Z, LinearCache linearCache, Activation activation, float lambda)
@@ -323,13 +353,13 @@ namespace ANN
             List<MatrixVectors> Zs = zCache;
             int layersCount = linearCaches.Count;
 
-            MatrixVectors YDividedByAL = MatrixCalculations.MatrixElementWise(Y, AL, Operation.Divide);
-            MatrixVectors OneMinusY = MatrixCalculations.BroadcastScalar(Y, 1, Operation.Subtract, true);
-            MatrixVectors OneMinusAL = MatrixCalculations.BroadcastScalar(AL, 1, Operation.Subtract, true);
-            MatrixVectors OneMinusYDividedByOneMinusAL = MatrixCalculations.MatrixElementWise(OneMinusY, OneMinusAL, Operation.Divide);
-            MatrixVectors dAL_P1 = MatrixCalculations.MatrixElementWise(YDividedByAL, OneMinusYDividedByOneMinusAL, Operation.Subtract);
+            MatrixVectors YDividedByAL = Y.MatrixElementWise(AL, Operation.Divide);
+            MatrixVectors OneMinusY = Y.BroadcastScalar(1, Operation.Subtract, true);
+            MatrixVectors OneMinusAL = AL.BroadcastScalar(1, Operation.Subtract, true);
+            MatrixVectors OneMinusYDividedByOneMinusAL = OneMinusY.MatrixElementWise(OneMinusAL, Operation.Divide);
+            MatrixVectors dAL_P1 = YDividedByAL.MatrixElementWise(OneMinusYDividedByOneMinusAL, Operation.Subtract);
 
-            MatrixVectors dAL = MatrixCalculations.BroadcastScalar(dAL_P1, -1, Operation.Multiply);
+            MatrixVectors dAL = dAL_P1.BroadcastScalar(-1, Operation.Multiply);
             Tuple<MatrixVectors, MatrixVectors, MatrixVectors> derivatives = ActivationsBackward(dAL, Zs[layersCount - 1], linearCaches[layersCount - 1], Activation.Sigmoid, lambda);
             MatrixVectors dWL = derivatives.Item1;
             MatrixVectors dbL = derivatives.Item2;
@@ -351,7 +381,7 @@ namespace ANN
             return gradients;
         }
 
-        public Dictionary<string, MatrixVectors> UpdateParameters(Dictionary<string, MatrixVectors> parameters, Dictionary<string, MatrixVectors> gradients, int[] dims, float learningRate)
+        public Dictionary<string, MatrixVectors> UpdateParameters(Dictionary<string, MatrixVectors> theta, Dictionary<string, MatrixVectors> gradients, int[] dims, float alpha, float beta1, float beta2, int currentStep, float eps)
         {
             ///<summary>
             /// This method uses the gradients which are the derivatives dW and db of each layer
@@ -365,15 +395,50 @@ namespace ANN
             /// This method will return the updated parameters.
             ///</summary>
             
+
             for(int l = 1; l < dims.Length; l++)
             {
-                MatrixVectors dWxLearningRate = MatrixCalculations.BroadcastScalar(gradients["dW" + l], learningRate, Operation.Multiply);
-                MatrixVectors dbxLearningRate = MatrixCalculations.BroadcastScalar(gradients["db" + l], learningRate, Operation.Multiply);
-                parameters["W" + l] = MatrixCalculations.MatrixElementWise(parameters["W" + l], dWxLearningRate, Operation.Subtract);
-                parameters["b" + l] = MatrixCalculations.MatrixElementWise(parameters["b" + l], dbxLearningRate, Operation.Subtract);
+                //AdamsOptimization(l, gradients, theta, beta1, beta2, currentStep, alpha, eps);
+                MatrixVectors dWxLearningRate = gradients["dW" + l].BroadcastScalar(alpha, Operation.Multiply);
+                MatrixVectors dbxLearningRate = gradients["db" + l].BroadcastScalar(alpha, Operation.Multiply);
+                theta["W" + l] = theta["W" + l].MatrixElementWise(dWxLearningRate, Operation.Subtract);
+                theta["b" + l] = theta["b" + l].MatrixElementWise(dbxLearningRate, Operation.Subtract);
             }
 
-            return parameters;
+            return theta;
+        }
+
+        private void AdamsOptimization(int l,  Dictionary<string, MatrixVectors> gradients, Dictionary<string, MatrixVectors> theta, float beta1, float beta2, int currentStep, float alpha, float eps)
+        {
+            MatrixVectors vdwXbeta1 = adamsDerivatives["Vdw" + l].BroadcastScalar(beta1, Operation.Multiply);
+            MatrixVectors dwX1_beta1 = gradients["dW" + l].BroadcastScalar(1 - beta1, Operation.Multiply);
+            adamsDerivatives["Vdw" + l] = vdwXbeta1.MatrixElementWise(dwX1_beta1, Operation.Add);
+
+            MatrixVectors vdbXbeta1 = adamsDerivatives["Vdb" + l].BroadcastScalar(beta1, Operation.Multiply);
+            MatrixVectors dbX1_beta1 = gradients["db" + l].BroadcastScalar(1 - beta1, Operation.Multiply);
+            adamsDerivatives["Vdb" + l] = vdbXbeta1.MatrixElementWise(dbX1_beta1, Operation.Add);
+
+            MatrixVectors vdwCorrected = adamsDerivatives["Vdw" + l].BroadcastScalar((float)(1 - Math.Pow(beta1, currentStep)), Operation.Divide);
+            MatrixVectors vdbCorrected = adamsDerivatives["Vdb" + l].BroadcastScalar((float)(1 - Math.Pow(beta1, currentStep)), Operation.Divide);
+
+            MatrixVectors sdwXbeta2 = adamsDerivatives["Sdw" + l].BroadcastScalar(beta2, Operation.Multiply);
+            MatrixVectors dwSquareX1_beta2 = gradients["dW" + l].Square().BroadcastScalar(1 - beta2, Operation.Multiply);
+            adamsDerivatives["Sdw" + l] = sdwXbeta2.MatrixElementWise(dwSquareX1_beta2, Operation.Add);
+
+            MatrixVectors sdbXbeta1 = adamsDerivatives["Sdb" + l].BroadcastScalar(beta2, Operation.Multiply);
+            MatrixVectors dbSquareX1_beta2 = gradients["db" + l].Square().BroadcastScalar(1 - beta2, Operation.Multiply);
+            adamsDerivatives["Sdb" + l] = sdbXbeta1.MatrixElementWise(dbSquareX1_beta2, Operation.Add);
+
+            MatrixVectors sdwCorrected = adamsDerivatives["Sdw" + l].BroadcastScalar((float)(1 - Math.Pow(beta2, currentStep)), Operation.Divide);
+            MatrixVectors sdbCorrected = adamsDerivatives["Sdb" + l].BroadcastScalar((float)(1 - Math.Pow(beta2, currentStep)), Operation.Divide);
+
+            MatrixVectors vdwCorrectedXalpha = vdwCorrected.BroadcastScalar(alpha, Operation.Multiply);
+            MatrixVectors sdwCorrectedEpsilon = sdwCorrected.Sqrt().BroadcastScalar(eps, Operation.Add);
+            MatrixVectors vdbCorrectedXalpha = vdbCorrected.BroadcastScalar(alpha, Operation.Multiply);
+            MatrixVectors sdbCorrectedEpsilon = sdbCorrected.Sqrt().BroadcastScalar(eps, Operation.Add);
+
+            theta["W" + l] = theta["W" + l].MatrixElementWise(vdwCorrectedXalpha.MatrixElementWise(sdwCorrectedEpsilon, Operation.Divide), Operation.Subtract);
+            theta["b" + l] = theta["b" + l].MatrixElementWise(vdbCorrectedXalpha.MatrixElementWise(sdbCorrectedEpsilon, Operation.Divide), Operation.Subtract);
         }
 
         public void Predict(List<MatrixVectors> inputs, List<int> trueLabels, Dictionary<string, MatrixVectors> theta, int[] dims)

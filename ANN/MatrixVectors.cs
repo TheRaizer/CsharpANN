@@ -37,17 +37,6 @@ namespace ANN
             }
         }
 
-        public void InitializeWithZeros()
-        {
-            for (int y = 0; y < rows; y++)
-            {
-                for (int x = 0; x < columns; x++)
-                {
-                    MatrixVector[x, y] = 0;
-                }
-            }
-        }
-
         public void InputValuesIntoMatrix()
         {
             for(int y = 0; y < rows; y++)

@@ -40,8 +40,8 @@ namespace ANN
                         dogPixelValues.Add((float)dogImage.GetPixel(x, y).B / 255);
                     }
                 }
-                MatrixVectors catVector = MatrixCalculations.ListToVector(catPixelValues, 1);
-                MatrixVectors dogVector = MatrixCalculations.ListToVector(dogPixelValues, 1);
+                MatrixVectors catVector = catPixelValues.ListToVector(1);
+                MatrixVectors dogVector = dogPixelValues.ListToVector(1);
 
                 MatrixVectors catLabel = new MatrixVectors(1, 1);
                 MatrixVectors dogLabel = new MatrixVectors(1, 1);
