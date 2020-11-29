@@ -10,19 +10,20 @@ namespace ANN
         private static readonly LoadCsvSheet csvLoader = new LoadCsvSheet();
         private static readonly NeuralNetwork neuralNetwork = new NeuralNetwork(new int[] { 4, 3, 2, 1 });
 
-        public static void IrisPredictions(List<Tuple<List<MatrixVectors>, List<MatrixVectors>>> batches, Dictionary<string, MatrixVectors> theta, int[] dims)
+        public static void IrisPredictions(Dictionary<string, MatrixVectors> theta, int[] dims)
         {
+            Tuple<List<MatrixVectors>, List<MatrixVectors>> data = csvLoader.LoadIrisData("C:\\Users/Admin/source/repos/ANN/ANN/Data/IrisData/IrisTest.csv");
             List<int> labels = new List<int>();
-            for (int i = 0; i < batches[0].Item2.Count; i++)
+            for (int i = 0; i < data.Item2.Count; i++)
             {
-                labels.Add((int)batches[0].Item2[i].MatrixVector[0, 0]);
+                labels.Add((int)data.Item2[i].MatrixVector[0, 0]);
             }
-            neuralNetwork.Predict(batches[0].Item1, labels, theta, dims);
+            neuralNetwork.Predict(data.Item1, labels, theta, dims);
         }
 
         public static void IrisTraining(int[] dims)
         {
-            int iterations = 1000;
+            int iterations = 500;
 
             Dictionary<string, MatrixVectors> theta = neuralNetwork.InitalizeParameters(dims);
 
@@ -62,7 +63,7 @@ namespace ANN
                     }
                 }
             }
-            IrisPredictions(batches, theta, dims);
+            IrisPredictions(theta, dims);
 
             Console.Write("Save theta? ");
             string save = Console.ReadLine();

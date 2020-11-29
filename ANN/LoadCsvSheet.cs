@@ -6,7 +6,7 @@ namespace ANN
 {
     public class LoadCsvSheet
     {
-        public Tuple<List<MatrixVectors>, List<MatrixVectors>> LoadIrisData(string path = "C:\\Users/Admin/source/repos/ANN/ANN/Data/training_set/IrisData/IrisTraining.csv")
+        public Tuple<List<MatrixVectors>, List<MatrixVectors>> LoadIrisData(string path = "C:\\Users/Admin/source/repos/ANN/ANN/Data/IrisData/IrisTraining.csv")
         {
             List<MatrixVectors> dataVector = new List<MatrixVectors>();
             List<MatrixVectors> labelVector = new List<MatrixVectors>();
@@ -46,7 +46,6 @@ namespace ANN
                     }
                 }
             }
-
             return new Tuple<List<MatrixVectors>, List<MatrixVectors>>(dataVector, labelVector);
         }
     }
