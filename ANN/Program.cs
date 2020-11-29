@@ -28,7 +28,7 @@ namespace ANN
         {
             int[] dims = { 4, 3, 2, 1 };
             neuralNetwork = new NeuralNetwork(dims);
-            Console.Write("'predict' or 'train' or 'predict image': ");
+            Console.Write("'predict' or 'train' or 'predict image' or 'predict iris': ");
             string choice = Console.ReadLine();
             if (choice == "train")
             {
