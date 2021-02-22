@@ -24,15 +24,13 @@ namespace ANN
         static void Main(string[] args)
         {
             int[] dims = { 4, 3, 2, 1 };
-            Console.Write("'predict' or 'train' or 'predict image' or 'predict iris': ");
+            Console.Write("'test predict' or 'train' or 'predict iris': ");
             string choice = Console.ReadLine();
             if (choice == "train")
             {
-                //FunctionTrainingTest.NeuralNetworkSimpleFunctionTraining(dims);
-                //CatDogTrainingTest.ANNCatDogTraining(dims);
                 IrisTrainingTest.IrisTraining(dims);
             }
-            else if (choice == "predict")
+            else if (choice == "test predict")
             {
                 FunctionTrainingTest.ANN_Test_Predictions(dims);
             }

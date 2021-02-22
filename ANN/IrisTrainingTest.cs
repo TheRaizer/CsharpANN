@@ -44,6 +44,7 @@ namespace ANN
                 {
                     List<MatrixVectors> XBatch = batches[b].Item1;
                     List<MatrixVectors> YBatch = batches[b].Item2;
+
                     for (int t = 0; t < XBatch.Count; t++)
                     {
                         Tuple<List<LinearCache>, List<MatrixVectors>, MatrixVectors> cachesAndAL = neuralNetwork.ForwardPropagation(XBatch[t], theta, dims);
