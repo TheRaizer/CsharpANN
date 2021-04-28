@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace ANN
 {
@@ -12,9 +11,9 @@ namespace ANN
 
     public enum Activation
     {
-       Sigmoid,
-       ReLu,
-       SoftMax
+        Sigmoid,
+        ReLu,
+        SoftMax
     }
 
     class Program
@@ -24,17 +23,13 @@ namespace ANN
         static void Main(string[] args)
         {
             int[] dims = { 4, 3, 2, 1 };
-            Console.Write("'test predict' or 'train' or 'predict iris': ");
+            Console.Write("'train iris' or 'predict iris': ");
             string choice = Console.ReadLine();
-            if (choice == "train")
+            if (choice == "train iris")
             {
                 IrisTrainingTest.IrisTraining(dims);
             }
-            else if (choice == "test predict")
-            {
-                FunctionTrainingTest.ANN_Test_Predictions(dims);
-            }
-            else if(choice == "predict iris")
+            else if (choice == "predict iris")
             {
                 Dictionary<string, MatrixVectors> theta = JsonConvert.DeserializeObject<Dictionary<string, MatrixVectors>>(File.ReadAllText("C:\\Users/Admin/source/repos/ANN/ANN/ThetaIris2Class.json"));
 

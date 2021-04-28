@@ -8,7 +8,7 @@ namespace ANN
     public static class IrisTrainingTest
     {
         private static readonly LoadCsvSheet csvLoader = new LoadCsvSheet();
-        private static readonly NeuralNetwork neuralNetwork = new NeuralNetwork(new int[] { 4, 3, 2, 1 });
+        private static readonly NeuralNetwork neuralNetwork = new NeuralNetwork();
 
         public static void IrisPredictions(Dictionary<string, MatrixVectors> theta, int[] dims)
         {
@@ -23,7 +23,7 @@ namespace ANN
 
         public static void IrisTraining(int[] dims)
         {
-            int iterations = 500;
+            int iterations = 1000;
 
             Dictionary<string, MatrixVectors> theta = neuralNetwork.InitalizeParameters(dims);
 
@@ -31,9 +31,6 @@ namespace ANN
             List<Tuple<List<MatrixVectors>, List<MatrixVectors>>> batches = neuralNetwork.GenerateBatches(32, data.Item1, data.Item2);
             float lambda = 0f;
             float learningRate = 0.0075f;
-            float beta1 = 0.9f;
-            float beta2 = 0.999f;
-            float eps = 1e-8f;
             int currentStep = 0;
 
             Console.WriteLine("Starting network...");
@@ -51,7 +48,7 @@ namespace ANN
                         cost = neuralNetwork.ComputeCost(cachesAndAL.Item3, YBatch[t], lambda, theta, dims);
                         Dictionary<string, MatrixVectors> gradients = neuralNetwork.BackwardPropagation(YBatch[t], cachesAndAL.Item3, cachesAndAL.Item1, cachesAndAL.Item2, lambda);
                         currentStep++;
-                        theta = neuralNetwork.UpdateParameters(theta, gradients, dims, learningRate, beta1, beta2, currentStep, eps);
+                        theta = neuralNetwork.UpdateParameters(theta, gradients, dims, learningRate);
                     }
                 }
 
